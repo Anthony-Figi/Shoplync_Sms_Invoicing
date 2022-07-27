@@ -24,7 +24,11 @@ class WebserviceSpecificManagementSmsInvoiceUpload implements WebserviceSpecific
     /**
      * @var WebserviceOutputBuilder
      */
-    protected $objOutput;
+    protected $objOutput;    
+    /**
+     * @var int The maximum size supported when uploading images, in bytes
+     */
+    protected $maximumSize = 3000000;
  
     /**
      * @var array The list of supported mime types
@@ -115,9 +119,6 @@ class WebserviceSpecificManagementSmsInvoiceUpload implements WebserviceSpecific
         
         if (!$mime_type || !in_array($mime_type, $this->acceptedMimeTypes)) {
             throw new WebserviceException('This type of image format is not recognized, allowed formats are: ' . implode('", "', $this->acceptedMimeTypes), [73, 400]);
-        } elseif ($file['error']) {
-            // Check error while uploading
-            throw new WebserviceException('Error while uploading image. Please change your server\'s settings', [74, 400]);
         }
         
         return true;
@@ -149,9 +150,11 @@ class WebserviceSpecificManagementSmsInvoiceUpload implements WebserviceSpecific
                 if ($this->isValidMimeType($mime_type) && move_uploaded_file($_FILES['file']['tmp_name'], $full_path))
                 {
                     //save path/link inside of db for ps_ca_garage cust id + garage_ id
-                    error_log('relative_path: '.$path_to_save.$file_name);
+                    error_log('File Saved To: '.$path_to_save.$file_name);
                 }
             }
+            else
+                error_log('Could not save invoicing file.');
         }
         return $this->getWsObject()->getOutputEnabled();
     }

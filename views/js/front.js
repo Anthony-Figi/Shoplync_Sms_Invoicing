@@ -25,3 +25,69 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
+
+
+/*
+ * This function will output out debug messages to console, 
+ * Used to master enable/disabled all messages
+*/
+const showDebug = true;
+function dbg($msg, forceMsg = false)
+{
+    if(showDebug || forceMsg)
+        console.log($msg);
+}
+
+function DownloadInvoice(orderID)
+{
+    if(orderID)
+    {
+        //Send Ajax Request...etc
+        dbg('Downloading Invoice');
+        var form_data = new FormData();
+        form_data.append('ajax', true);
+        form_data.append('action', 'downloadInvoice');
+        form_data.append('order_id', orderID);
+        
+        $.ajax({
+            type: 'POST',
+            cache: false,
+            contentType: false,
+            processData: false,
+            url: adminajax_link, 
+            data: form_data,
+            xhrFields: { responseType: 'blob' },
+            success : function (data) {
+                if(data)
+                {
+                    dbg(data);
+                    dbg('Downloaded Invoice', true);
+                    var blob = new Blob([data],{type: 'application/pdf'});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = orderID+'.pdf';
+                    link.click();
+                }
+            },
+            error : function (data){
+                
+                var psInvoices = $('div#order-infos div.box:last-child ul li:last-child a');
+                if(psInvoices.length > 0)
+                {
+                    psInvoices[0].click();
+                }
+                else 
+                {
+                    var invoiceBtn = document.getElementById('viewInvoiceBtn');
+                    var invoiceBox = document.getElementById('viewSmsInvoiceBox');
+                    
+                    if(invoiceBtn)
+                        invoiceBtn.disabled = true;
+                    
+                    if(invoiceBox)
+                        invoiceBox.innerHTML += '<p class="mt-1 red-bold font-weight-bold font-italic">Could not load invoice, please try again later.</p>';
+                }
+            }
+        });
+    }
+}

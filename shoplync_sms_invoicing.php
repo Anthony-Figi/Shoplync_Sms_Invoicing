@@ -44,6 +44,7 @@ class Shoplync_sms_invoicing extends Module
         $this->author = 'Shoplync';
         $this->need_instance = 0;
 
+        $this->controllers = array('download');
         /**
          * Set $this->bootstrap to true if your module is compliant with bootstrap (PrestaShop 1.6)
          */
@@ -206,6 +207,10 @@ class Shoplync_sms_invoicing extends Module
     {
         $this->context->controller->addJS($this->_path.'/views/js/front.js');
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
+        
+        Media::addJsDef([
+            'adminajax_link' => $this->context->link->getModuleLink($this->name, 'download', array(), true),
+        ]);
     }
     
     /**
@@ -213,6 +218,7 @@ class Shoplync_sms_invoicing extends Module
      */     
     public function hookDisplayOrderDetail($params)
     {
+        $path_to_save = __PS_BASE_URI__.'modules/'.$this->name.'/invoices/';
         $order_id = $params['order']->id;
         
         if(!Configuration::get('SHOPLYNC_SMS_INVOICING_LIVE_MODE', true))
@@ -223,14 +229,23 @@ class Shoplync_sms_invoicing extends Module
         $disabled = ($order_id == 0) ? 'disabled' : '';
         
         $shipmentElement = '<div id="viewSmsInvoiceBox" class="box text-center">'
-            .'<h3>Items In Shipment</h3>'
-            .'<button type="button" name="viewSmsInvoice" class="btn btn-primary form-control-submit" '.$disabled.'>'
+            .'<h3>Order Details</h3>'
+            .'<button id="viewInvoiceBtn" type="button" name="viewSmsInvoice" onclick="DownloadInvoice('.$order_id.');" class="btn btn-primary form-control-submit" '.$disabled.'>'
             .'<i class="material-icons" style="font-size: 2em;margin-right: 10px;">file_download</i>'
             .'<span style="vertical-align: middle;">View Invoice</span>'
             .'</button>'
             .'</div>';
+        
+        if(!file_exists($path_to_save.$order_id.'.pdf') && !OrderState::invoiceAvailable($params['order']->current_state))
+        {
+            $shipmentElement = '<!-- No SMS/Prestashop Invoice Available -->';
+        }
+            
         return $shipmentElement;
     }
+    
+    
+    
     
     public function hookAddWebserviceResources()
     {
