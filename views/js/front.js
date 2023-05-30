@@ -54,7 +54,7 @@ function DownloadInvoice(orderID)
             cache: false,
             contentType: false,
             processData: false,
-            url: adminajax_link, 
+            url: sms_invoice_adminajax_link, 
             data: form_data,
             xhrFields: { responseType: 'blob' },
             success : function (data) {
